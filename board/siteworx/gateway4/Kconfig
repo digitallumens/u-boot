@@ -1,0 +1,15 @@
+if TARGET_GATEWAY4
+
+config SYS_BOARD
+	default "gateway4"
+
+config SYS_VENDOR
+	default "siteworx"
+
+config SYS_CONFIG_NAME
+	default "gateway4"
+
+config IMX_CONFIG
+	default "board/siteworx/gateway4/imximage.cfg"
+
+endif
