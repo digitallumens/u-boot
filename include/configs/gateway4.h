@@ -24,15 +24,14 @@
 #endif
 
 #define CFG_EXTRA_ENV_SETTINGS \
-	"script=boot.scr\0" \
-	"image=zImage\0" \
+	"boot_order=ab\0" \
+	"boot_a_left=3\0" \
+	"boot_b_left=3\0" \
 	"console=ttymxc0\0" \
-	"fdt_high=0xffffffff\0" \
-	"initrd_high=0xffffffff\0" \
-	"fdt_file=undefined\0" \
-	"fdt_addr=0x83000000\0" \
-	"boot_fdt=try\0" \
-	"fastboot_buffer=0x8a000000\0" \
+	"fastboot_buffer=0x8a000000\0"
+
+#define CONFIG_ENV_FLAGS_LIST_DEFAULT "boot_order:xw,boot_a_left:dw,boot_b_left:dw"
+#define CFG_ENV_FLAGS_LIST_STATIC "boot_order:xw,boot_a_left:dw,boot_b_left:dw"
 
 /* Miscellaneous configurable options */
 
