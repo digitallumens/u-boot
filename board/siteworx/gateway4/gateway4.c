@@ -131,3 +131,81 @@ int checkboard(void)
 
 	return 0;
 }
+
+static int do_gateway_boot(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+{
+	char bootargs_buf[256];
+
+	char *upgrade_avail = env_get("boot_upgrade_available");
+    char *boot_part = env_get("boot_part");
+    char *boot_failed = env_get("boot_failed");
+	char *mtdparts = env_get("mtdparts");
+	if (!boot_part) {
+		//printf("No boot_part flag found, defaulting to A\n");
+		boot_part = "A"; // Default to partition A if not set
+	}
+	if (!mtdparts) {
+		mtdparts = "mtdparts=mtdparts=gpmi-nand:4m(boot),-(ubi)";
+	}
+	if (!upgrade_avail) {
+		//printf("No upgrade_available flag found, defaulting to 0\n");
+		upgrade_avail = "0";
+	}
+	if (!boot_failed) {
+		//printf("No boot_failed flag found, defaulting to 0\n");
+		boot_failed = "0";
+	}
+
+    printf("--- Running Update Boot Script ---\n");
+
+    if (strcmp(upgrade_avail, "1") == 0) {
+        printf("Trying upgrade on %s...\n", boot_part);
+        env_set("boot_upgrade_available", "0");
+        env_set("boot_failed", "1");
+        env_save(); // Triggers the flash write
+    } else if (strcmp(boot_failed, "1") == 0) {
+        printf("Upgrade failed on %s, reverting...\n", boot_part);
+        env_set("boot_failed", "0");
+        if (strcmp(boot_part, "A") == 0) {
+            env_set("boot_part", "B");
+        } else {
+            env_set("boot_part", "A");
+        }
+        env_save();
+    } else {
+        printf("No upgrade available, booting from %s\n", boot_part);
+    }
+
+	printf("--- Loading Kernel ---\n");
+	run_command("ubi part ubi; ubi read 0x8A000000 KERNEL-${boot_part}", 0);
+	snprintf(bootargs_buf, sizeof(bootargs_buf),
+		"boot_part=%s console=ttymxc0,115200 clk_ignore_unused %s ubi.mtd=ubi ubi.block=0,ROOT-%s",
+		boot_part, mtdparts, boot_part);
+	env_set("bootargs", bootargs_buf);
+	if (strcmp(boot_part, "B") == 0) {
+		env_set("root_blk_dev", "/dev/ubiblock0_5");
+	} else {
+		env_set("root_blk_dev", "/dev/ubiblock0_4");
+	}
+	run_command("source 0x8A000000", 0);
+
+	return run_command("bootm 0x8A000000; reset", 0);
+}
+
+U_BOOT_CMD(
+    gateway_boot, 1, 0, do_gateway_boot,
+    "Execute the Gateway A/B secure boot logic",
+    ""
+);
+
+void reset_cpu(void)
+{
+    /* * Write 0x04 to WDOG1_WCR (0x020BC000) to instantly:
+     * - Enable the watchdog (WDE, bit 2 = 1)
+     * - Assert the Software Reset Signal (SRS, bit 4 = 0)
+     */
+    writew(0x04, 0x020BC000);
+    
+    /* Trap the CPU while the hardware reset fires (takes a few milliseconds) */
+    while (1);
+}
