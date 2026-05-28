@@ -140,6 +140,7 @@ static int do_gateway_boot(struct cmd_tbl *cmdtp, int flag, int argc, char *cons
     char *boot_part = env_get("boot_part");
     char *boot_failed = env_get("boot_failed");
 	char *mtdparts = env_get("mtdparts");
+	bool boot_part_a = false;
 	if (!boot_part) {
 		//printf("No boot_part flag found, defaulting to A\n");
 		boot_part = "A"; // Default to partition A if not set
@@ -156,9 +157,28 @@ static int do_gateway_boot(struct cmd_tbl *cmdtp, int flag, int argc, char *cons
 		boot_failed = "0";
 	}
 
+	//Sanitize the boot_part variable to ensure it's either "A" or "B"
+	if (strcmp(boot_part, "A") != 0 && strcmp(boot_part, "B") != 0) {
+		printf("Invalid boot_part value '%s', defaulting to A\n", boot_part);
+		boot_part = "A";
+	}
+
     printf("--- Running Update Boot Script ---\n");
 
+	if (strcmp(boot_part, "A") == 0) {
+		boot_part_a = true;
+	}
+
     if (strcmp(upgrade_avail, "1") == 0) {
+		if (boot_part_a) {
+            env_set("boot_part", "B");
+			boot_part = "B";
+			boot_part_a = false;
+        } else {
+            env_set("boot_part", "A");
+			boot_part = "A";
+			boot_part_a = true;
+        }
         printf("Trying upgrade on %s...\n", boot_part);
         env_set("boot_upgrade_available", "0");
         env_set("boot_failed", "1");
@@ -166,26 +186,30 @@ static int do_gateway_boot(struct cmd_tbl *cmdtp, int flag, int argc, char *cons
     } else if (strcmp(boot_failed, "1") == 0) {
         printf("Upgrade failed on %s, reverting...\n", boot_part);
         env_set("boot_failed", "0");
-        if (strcmp(boot_part, "A") == 0) {
+        if (boot_part_a) {
             env_set("boot_part", "B");
+			boot_part = "B";
+			boot_part_a = false;
         } else {
             env_set("boot_part", "A");
+			boot_part = "A";
+			boot_part_a = true;
         }
         env_save();
     } else {
         printf("No upgrade available, booting from %s\n", boot_part);
     }
 
-	printf("--- Loading Kernel ---\n");
+	printf("--- Loading Kernel from %s ---\n", boot_part);
 	run_command("ubi part ubi; ubi read 0x8A000000 KERNEL-${boot_part}", 0);
 	snprintf(bootargs_buf, sizeof(bootargs_buf),
 		"boot_part=%s console=ttymxc0,115200 clk_ignore_unused %s ubi.mtd=ubi ubi.block=0,ROOT-%s",
 		boot_part, mtdparts, boot_part);
 	env_set("bootargs", bootargs_buf);
-	if (strcmp(boot_part, "B") == 0) {
-		env_set("root_blk_dev", "/dev/ubiblock0_5");
-	} else {
+	if (boot_part_a) {
 		env_set("root_blk_dev", "/dev/ubiblock0_4");
+	} else {
+		env_set("root_blk_dev", "/dev/ubiblock0_5");
 	}
 	run_command("source 0x8A000000", 0);
 
