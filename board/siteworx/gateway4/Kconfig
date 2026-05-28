@@ -12,4 +12,11 @@ config SYS_CONFIG_NAME
 config IMX_CONFIG
 	default "board/siteworx/gateway4/imximage.cfg"
 
+config GATEWAY_FIT_CONFIG
+	string "fitImage configuration to load"
+	default "config-gateway4.dtb"
+	help
+	  This sets the specific DTB configuration node that will be
+	  loaded from the fitImage during the bootm sequence.
+
 endif

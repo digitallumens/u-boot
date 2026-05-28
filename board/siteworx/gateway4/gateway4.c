@@ -213,7 +213,8 @@ static int do_gateway_boot(struct cmd_tbl *cmdtp, int flag, int argc, char *cons
 	}
 	run_command("source 0x8A000000", 0);
 
-	return run_command("bootm 0x8A000000; reset", 0);
+	printf("--- Boot " CONFIG_GATEWAY_FIT_CONFIG " ---\n");
+	return run_command("bootm 0x8A000000#" CONFIG_GATEWAY_FIT_CONFIG "; reset", 0);
 }
 
 U_BOOT_CMD(
