@@ -13,8 +13,8 @@
 #include "mx6_common.h"
 #include <asm/mach-imx/gpio.h>
 
-#define CONFIG_ENV_FLAGS_LIST_DEFAULT "boot_part:sw,boot_upgrade_available:bw,boot_failed:bw"
-#define CFG_ENV_FLAGS_LIST_STATIC "boot_part:sw,boot_upgrade_available:bw,boot_failed:bw"
+#define CONFIG_ENV_FLAGS_LIST_DEFAULT "boot_part:sw,boot_upgrade_available:bw,boot_failed:bw,ubifs_auth_key:sw"
+#define CFG_ENV_FLAGS_LIST_STATIC "boot_part:sw,boot_upgrade_available:bw,boot_failed:bw,ubifs_auth_key:sw"
 
 /* Miscellaneous configurable options */
 
