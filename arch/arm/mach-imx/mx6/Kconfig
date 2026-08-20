@@ -472,6 +472,14 @@ config TARGET_MX6ULL_14X14_EVK
 	select IOMUX_LPSR
 	imply CMD_DM
 
+config TARGET_GATEWAY4
+	bool "Support Gateway4"
+	depends on MX6ULL
+	select BOARD_LATE_INIT
+	select DM
+	select DM_THERMAL
+	imply CMD_DM
+
 config TARGET_MX6ULZ_SMM_M2
 	bool "Support imx6ulz_smm_m2"
 	depends on MX6ULL
@@ -748,5 +756,6 @@ source "board/udoo/neo/Kconfig"
 source "board/wandboard/Kconfig"
 source "board/BuR/brppt2/Kconfig"
 source "board/out4/o4-imx6ull-nano/Kconfig"
+source "board/siteworx/gateway4/Kconfig"
 
 endif
