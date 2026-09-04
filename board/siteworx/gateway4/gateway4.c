@@ -163,6 +163,8 @@ static int do_gateway_boot(struct cmd_tbl *cmdtp, int flag, int argc, char *cons
 		boot_part = "A";
 	}
 
+	run_command("hab_status", 0);
+
     printf("--- Running Update Boot Script ---\n");
 
 	if (strcmp(boot_part, "A") == 0) {
